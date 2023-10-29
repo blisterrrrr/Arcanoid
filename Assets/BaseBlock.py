@@ -9,3 +9,9 @@ class BaseBlock:
 
     def destroy(self):
         pass
+
+    def explode(selfs):
+        pass
+
+    def calc_hp(self):
+        pass
