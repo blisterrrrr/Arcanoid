@@ -1,74 +1,187 @@
-import time
-from random import randint
-from math import sin, cos
+import datetime
 
 import pyray
 from raylib import colors
 
 
-class Ball:
-    speed_x = 5
-    speed_y = 5
-
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-
-    def draw(self, ball_texture):
-        pyray.draw_texture(ball_texture, self.x, self.y, colors.WHITE)
-
-    def move(self, screen_w, screen_h, panel_x):
-        if self.x <= 10:
-            self.speed_x = 5
-        if self.y <= 10:
-            self.speed_y = 5
-        if self.x >= screen_w - 100:
-            self.speed_x = -5
-        if self.y >= screen_h - 100:
-            self.speed_y = -5
-
-        if self.y >= screen_h - 145 and panel_x - 50 <= self.x <= panel_x + 200:
-            self.speed_y = -5
-
-        self.x += self.speed_x
-        self.y += self.speed_y
-
-
 def main():
-    # bc = int(input('Введи количество шаров: '))
-    bc = 3
-    angle = randint(0, 360)
-    width = 1000
-    height = 600
-    panel_x = int(width / 2 - 100)
-    print(angle)
+    # Инициализация окна
+    window_width = 800
+    window_height = 600
+    pyray.init_window(window_width, window_height, 'Hello, raylib')
+    pyray.set_exit_key(pyray.KeyboardKey.KEY_F8)
+    pyray.set_target_fps(120)
 
-    ball_list = [Ball(randint(0, width - 100), randint(0, height - 100)) for e in range(bc)]
+    # Инициализация глобальных переменных
+    scene_index = 0
+    scene_changed = True
+    background_color = colors.BLACK
 
-    pyray.init_window(width, height, 'balls')
-    ball = pyray.load_image('basketball.png')
-    ball_texture = pyray.load_texture_from_image(ball)
-    pyray.unload_image(ball)
+    # Инициализация сцены 0 (menu)
+    scene_0_button_new_geometry = pyray.Rectangle(window_width / 2 - 100 / 2, window_height / 2 - 10 - 50, 100, 50)
+    scene_0_button_exit_geometry = pyray.Rectangle(window_width / 2 - 100 / 2, window_height / 2 + 10, 100, 50)
+
+    motion_seconds = 3
+    motion_start = datetime.datetime.now()
+    motion_now = datetime.datetime.now()
+    percent_completed = 0
+    line_color = colors.WHITE
+
+    # Инициализация сцены 1 (game)
+    ball_image = pyray.load_image('basketball.png')
+    ball_texture = pyray.load_texture_from_image(ball_image)
+    pyray.unload_image(ball_image)
+    del ball_image
+
+    max_collision_count = 5
+
+    collision_text_format = 'Collisions: {}/' + str(max_collision_count)
+
+    ball_0_position = pyray.Vector2(10, 10)
+    ball_0_shift = [1, 1]
+    ball_1_position = pyray.Vector2(500, 100)
+    ball_1_shift = [-1, 1]
+    ball_2_position = pyray.Vector2(400, 500)
+    ball_2_shift = [-1, -1]
+    collision_count = 0
+
+    # Инициализация сцены 2 (gameover)
+    max_wait_seconds = 3
+    wait_seconds = 0
+    gameover_text_format = 'Game over ({}/{})'.format('{}', max_wait_seconds)
+    open_scene_datetime = datetime.datetime.now()
+
+    # Основной цикл программы
     while not pyray.window_should_close():
-        pyray.begin_drawing()
-        pyray.clear_background(colors.BLACK)
-        for e in ball_list:
-            e.draw(ball_texture)
-        pyray.draw_rectangle(panel_x, height - 45, 200, 30, colors.GREEN)
-        pyray.end_drawing()
 
-        for e in ball_list:
-            e.move(width, height, panel_x)
+        # Действия, выполняемые при первом появлении сцены на экране
+        if scene_changed:
+            scene_changed = False
+            if scene_index == 0:  # menu
+                motion_start = datetime.datetime.now()
+                motion_now = datetime.datetime.now()
+                percent_completed = 0
+            elif scene_index == 1:  # game
+                ball_0_position = pyray.Vector2(10, 10)
+                ball_0_shift = [1, 1]
+                ball_1_position = pyray.Vector2(500, 100)
+                ball_1_shift = [-1, 1]
+                ball_2_position = pyray.Vector2(400, 500)
+                ball_2_shift = [-1, -1]
+                collision_count = 0
+            elif scene_index == 2:  # gameover
+                open_scene_datetime = datetime.datetime.now()
 
-        time.sleep(0.01)
+        # Обработка событий различных сцен (при каждом кадре)
+        if not scene_changed:
+            if scene_index == 0:  # menu
+                if pyray.gui_button(scene_0_button_new_geometry, 'New game'):
+                    scene_changed = True
+                    scene_index = 1
+                if pyray.gui_button(scene_0_button_exit_geometry, 'Exit'):
+                    pyray.close_window()
+                    exit(0)
+            elif scene_index == 1:  # game
+                if pyray.is_key_down(pyray.KeyboardKey.KEY_ESCAPE):
+                    scene_changed = True
+                    scene_index = 0
+            elif scene_index == 2:  # gameover
+                if pyray.is_key_down(pyray.KeyboardKey.KEY_ESCAPE):
+                    scene_changed = True
+                    scene_index = 0
 
-        if pyray.is_key_down(pyray.KeyboardKey.KEY_A):
-            panel_x -= 5 if panel_x > 10 else 0
-        elif pyray.is_key_down(pyray.KeyboardKey.KEY_D):
-            panel_x += 5 if panel_x < 790 else 0
+        # Обработка логики работы сцен (при каждом кадре)
+        if not scene_changed:
+            if scene_index == 0:  # menu
+                motion_now = datetime.datetime.now()
+                delta = (motion_now - motion_start)
+                ms = delta.seconds * 1000000 + delta.microseconds
+                percent_completed = min(1.0, ms / (motion_seconds * 1000000))
+            elif scene_index == 1:  # game
+                # Движение мячиков
+                ball_0_position.x += ball_0_shift[0]
+                ball_0_position.y += ball_0_shift[1]
+                ball_1_position.x += ball_1_shift[0]
+                ball_1_position.y += ball_1_shift[1]
+                ball_2_position.x += ball_2_shift[0]
+                ball_2_position.y += ball_2_shift[1]
 
-    pyray.close_window()
+                # Отражение от стенок
+                if ball_0_position.x < 0 or ball_0_position.x + ball_texture.width > window_width:
+                    ball_0_shift[0] *= -1
+                if ball_0_position.y < 0 or ball_0_position.y + ball_texture.height > window_height:
+                    ball_0_shift[1] *= -1
+                if ball_1_position.x < 0 or ball_1_position.x + ball_texture.width > window_width:
+                    ball_1_shift[0] *= -1
+                if ball_1_position.y < 0 or ball_1_position.y + ball_texture.height > window_height:
+                    ball_1_shift[1] *= -1
+                if ball_2_position.x < 0 or ball_2_position.x + ball_texture.width > window_width:
+                    ball_2_shift[0] *= -1
+                if ball_2_position.y < 0 or ball_2_position.y + ball_texture.height > window_height:
+                    ball_2_shift[1] *= -1
+
+                # Обработка коллизий
+                ball_0_center = pyray.Vector2(ball_0_position.x + ball_texture.width / 2,
+                                              ball_0_position.y + ball_texture.height / 2)
+                ball_0_radius = ball_texture.width / 2
+                ball_1_center = pyray.Vector2(ball_1_position.x + ball_texture.width / 2,
+                                              ball_1_position.y + ball_texture.height / 2)
+                ball_1_radius = ball_texture.width / 2
+                ball_2_center = pyray.Vector2(ball_2_position.x + ball_texture.width / 2,
+                                              ball_2_position.y + ball_texture.height / 2)
+                ball_2_radius = ball_texture.width / 2
+                if pyray.check_collision_circles(ball_0_center, ball_0_radius, ball_1_center, ball_1_radius):
+                    ball_0_shift, ball_1_shift = ball_1_shift, ball_0_shift
+                    collision_count += 1
+                if pyray.check_collision_circles(ball_0_center, ball_0_radius, ball_2_center, ball_2_radius):
+                    ball_0_shift, ball_2_shift = ball_2_shift, ball_0_shift
+                    collision_count += 1
+                if pyray.check_collision_circles(ball_1_center, ball_1_radius, ball_2_center, ball_2_radius):
+                    ball_1_shift, ball_2_shift = ball_2_shift, ball_1_shift
+                    collision_count += 1
+
+                # Переключение сцен при достижении нужного количества коллизий
+                if collision_count == max_collision_count:
+                    scene_changed = True
+                    scene_index = 2
+
+            elif scene_index == 2:  # gameover
+                now = datetime.datetime.now()
+                wait_seconds = (now - open_scene_datetime).seconds
+
+                # Переключение сцен при достижении нужного количества секунд (микросекунд)
+                if wait_seconds == max_wait_seconds:
+                    scene_changed = True
+                    scene_index = 0
+
+        # Обработка отрисовки различных сцен (при каждом кадре)
+        if not scene_changed:
+            pyray.begin_drawing()
+            pyray.clear_background(background_color)
+
+            if scene_index == 0:  # menu
+                # четыре анимированные линии (две кнопки уже отрисовались)
+                pyray.draw_line_ex(pyray.Vector2(100, 100), pyray.Vector2(100 + 600 * percent_completed, 100),
+                                   4, line_color)
+                pyray.draw_line_ex(pyray.Vector2(700, 100), pyray.Vector2(700, 100 + 400 * percent_completed, ),
+                                   4, line_color)
+                pyray.draw_line_ex(pyray.Vector2(700, 500), pyray.Vector2(700 - 600 * percent_completed, 500),
+                                   4, line_color)
+                pyray.draw_line_ex(pyray.Vector2(100, 500), pyray.Vector2(100, 500 - 400 * percent_completed),
+                                   4, line_color)
+            elif scene_index == 1:  # game
+                pyray.draw_texture_v(ball_texture, ball_0_position, colors.WHITE)
+                pyray.draw_texture_v(ball_texture, ball_1_position, colors.WHITE)
+                pyray.draw_texture_v(ball_texture, ball_2_position, colors.WHITE)
+                pyray.draw_text(collision_text_format.format(collision_count), 10, 10, 78, colors.WHITE)
+            elif scene_index == 2:  # gameover
+                pyray.draw_text(gameover_text_format.format(wait_seconds), 100, 250, 78, colors.RED)
+
+            pyray.end_drawing()
+
     pyray.unload_texture(ball_texture)
+    pyray.close_window()
+    exit(0)
 
 
 if __name__ == '__main__':
