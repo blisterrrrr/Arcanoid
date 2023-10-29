@@ -1,6 +1,6 @@
 class BaseBlock:
-    exp = 0
-    chance = 0.0
+    exp = 1
+    chance = 1.1
     exploadable = False
     hp = 1
 
