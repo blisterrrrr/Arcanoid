@@ -1,187 +1,219 @@
-import datetime
-import Assets
+from random import randint
 import pyray
+from abc import ABC, abstractmethod
 from raylib import colors
+import Assets.CustomBlock as CustomB
+
+
 
 
 def main():
-    # Инициализация окна
-    window_width = 800
-    window_height = 600
-    pyray.init_window(window_width, window_height, 'Hello, raylib')
-    pyray.set_exit_key(pyray.KeyboardKey.KEY_F8)
-    pyray.set_target_fps(120)
-
-    # Инициализация глобальных переменных
-    scene_index = 0
-    scene_changed = True
-    background_color = colors.BLACK
-
-    # Инициализация сцены 0 (menu)
-    scene_0_button_new_geometry = pyray.Rectangle(window_width / 2 - 100 / 2, window_height / 2 - 10 - 50, 100, 50)
-    scene_0_button_exit_geometry = pyray.Rectangle(window_width / 2 - 100 / 2, window_height / 2 + 10, 100, 50)
-
-    motion_seconds = 3
-    motion_start = datetime.datetime.now()
-    motion_now = datetime.datetime.now()
-    percent_completed = 0
-    line_color = colors.WHITE
-
-    # Инициализация сцены 1 (game)
-    ball_image = pyray.load_image('basketball.png')
-    ball_texture = pyray.load_texture_from_image(ball_image)
-    pyray.unload_image(ball_image)
-    del ball_image
-
-    max_collision_count = 5
-
-    collision_text_format = 'Collisions: {}/' + str(max_collision_count)
-
-    ball_0_position = pyray.Vector2(10, 10)
-    ball_0_shift = [1, 1]
-    ball_1_position = pyray.Vector2(500, 100)
-    ball_1_shift = [-1, 1]
-    ball_2_position = pyray.Vector2(400, 500)
-    ball_2_shift = [-1, -1]
-    collision_count = 0
-
-    # Инициализация сцены 2 (gameover)
-    max_wait_seconds = 3
-    wait_seconds = 0
-    gameover_text_format = 'Game over ({}/{})'.format('{}', max_wait_seconds)
-    open_scene_datetime = datetime.datetime.now()
-
-    # Основной цикл программы
+    # text data
+    width = 800
+    height = 600
+    pyray.init_window(width, height, "HI MEN or MOMEN")
+    font = pyray.load_font_ex('comic_sans_ms.ttf', 68, None, 0)
+    t = "DO YOU WANT"
+    p = "TO PLAY"
+    y = "YES"
+    f = 0
+    i = 0
+    # main code
     while not pyray.window_should_close():
+        keys = []
+        while value := pyray.get_key_pressed():
+            keys.append(value)
+        if pyray.is_key_down(pyray.KeyboardKey.KEY_SPACE):
+            f = 1
+        # draw back
+        pyray.begin_drawing()
+        pyray.clear_background(colors.BLACK)
+        pyray.draw_text_ex(font, '{}'.format(t), pyray.Vector2(150, 60), 80, 1, colors.WHITE)
+        pyray.draw_text_ex(font, '{}'.format(p), pyray.Vector2(180, 180), 100, 1, colors.WHITE)
+        if not f:
+            pyray.draw_rectangle_lines(
+                300, 300, 200, 100,
+                colors.WHITE)
+            pyray.draw_text_ex(font, '{}'.format(y), pyray.Vector2(315, 310), 90, 1, colors.WHITE)
+        pyray.end_drawing()
+        if f:
+            pyray.draw_rectangle(
+                300, 300, 200, 100,
+                colors.WHITE)
+            pyray.draw_text_ex(font, '{}'.format(y), pyray.Vector2(315, 310), 90, 1, colors.BLACK)
+            i += 1
+        if i == 1000:
+            pyray.close_window()
+            # blocks
+            block = []
+            for m in range(5):
+                b = []
+                for n in range(10):
+                    k = randint(0, 1000)
+                    if k <= 5:
+                        b.append(0)
+                    if 5 < k <= 650:
+                        b.append(CustomB.Brick())
+                    if 650 < k <= 700:
+                        b.append(CustomB.Tnt())
+                    if 700 < k <= 1000:
+                        b.append(CustomB.Block())
+                block.append(b)
+                print(b)
+            print(block)
+            bx = 10
+            by = 50
 
-        # Действия, выполняемые при первом появлении сцены на экране
-        if scene_changed:
-            scene_changed = False
-            if scene_index == 0:  # menu
-                motion_start = datetime.datetime.now()
-                motion_now = datetime.datetime.now()
-                percent_completed = 0
-            elif scene_index == 1:  # game
-                ball_0_position = pyray.Vector2(10, 10)
-                ball_0_shift = [1, 1]
-                ball_1_position = pyray.Vector2(500, 100)
-                ball_1_shift = [-1, 1]
-                ball_2_position = pyray.Vector2(400, 500)
-                ball_2_shift = [-1, -1]
-                collision_count = 0
-            elif scene_index == 2:  # gameover
-                open_scene_datetime = datetime.datetime.now()
+            i = 0
+            exp = 0
+            flag = 1
+            # text data
+            font = pyray.load_font_ex('comic_sans_ms.ttf', 68, None, 0)
 
-        # Обработка событий различных сцен (при каждом кадре)
-        if not scene_changed:
-            if scene_index == 0:  # menu
-                if pyray.gui_button(scene_0_button_new_geometry, 'New game'):
-                    scene_changed = True
-                    scene_index = 1
-                if pyray.gui_button(scene_0_button_exit_geometry, 'Exit'):
-                    pyray.close_window()
-                    exit(0)
-            elif scene_index == 1:  # game
-                if pyray.is_key_down(pyray.KeyboardKey.KEY_ESCAPE):
-                    scene_changed = True
-                    scene_index = 0
-            elif scene_index == 2:  # gameover
-                if pyray.is_key_down(pyray.KeyboardKey.KEY_ESCAPE):
-                    scene_changed = True
-                    scene_index = 0
+            # ball data
+            width = 800
+            height = 600
+            pyray.init_window(width, height, "Hello")
+            ball = pyray.load_image('basketball.png')
+            ball_texture = pyray.load_texture_from_image(ball)
+            pyray.unload_image(ball)
+            flx = 1
+            fly = 1
+            speed_ball = 0.2
+            count = 0
 
-        # Обработка логики работы сцен (при каждом кадре)
-        if not scene_changed:
-            if scene_index == 0:  # menu
-                motion_now = datetime.datetime.now()
-                delta = (motion_now - motion_start)
-                ms = delta.seconds * 1000000 + delta.microseconds
-                percent_completed = min(1.0, ms / (motion_seconds * 1000000))
-            elif scene_index == 1:  # game
-                # Движение мячиков
-                ball_0_position.x += ball_0_shift[0]
-                ball_0_position.y += ball_0_shift[1]
-                ball_1_position.x += ball_1_shift[0]
-                ball_1_position.y += ball_1_shift[1]
-                ball_2_position.x += ball_2_shift[0]
-                ball_2_position.y += ball_2_shift[1]
+            # vector data
+            vec_x = randint(0, 800)
+            vec_y = randint(0, 600)
+            rad = ((vec_x - width // 2 - ball_texture.width // 2) ** 2 + (
+                    vec_y - height // 2 - ball_texture.height // 2) ** 2) ** 0.5
+            cos_x = round((vec_x - width // 2 - ball_texture.width // 2) / rad, 6)
+            sin_x = round((vec_y - height // 2 - ball_texture.height // 2) / rad, 6)
 
-                # Отражение от стенок
-                if ball_0_position.x < 0 or ball_0_position.x + ball_texture.width > window_width:
-                    ball_0_shift[0] *= -1
-                if ball_0_position.y < 0 or ball_0_position.y + ball_texture.height > window_height:
-                    ball_0_shift[1] *= -1
-                if ball_1_position.x < 0 or ball_1_position.x + ball_texture.width > window_width:
-                    ball_1_shift[0] *= -1
-                if ball_1_position.y < 0 or ball_1_position.y + ball_texture.height > window_height:
-                    ball_1_shift[1] *= -1
-                if ball_2_position.x < 0 or ball_2_position.x + ball_texture.width > window_width:
-                    ball_2_shift[0] *= -1
-                if ball_2_position.y < 0 or ball_2_position.y + ball_texture.height > window_height:
-                    ball_2_shift[1] *= -1
+            # rectangle data
+            rec_width = 180
+            rec_height = 5
+            rec_x = width // 2 - rec_width // 2
+            rec_y = height - rec_height - 5
+            tx = 1
+            ball_x = width // 2 - ball_texture.width // 2
+            ball_y = height // 2 - ball_texture.height // 2
 
-                # Обработка коллизий
-                ball_0_center = pyray.Vector2(ball_0_position.x + ball_texture.width / 2,
-                                              ball_0_position.y + ball_texture.height / 2)
-                ball_0_radius = ball_texture.width / 2
-                ball_1_center = pyray.Vector2(ball_1_position.x + ball_texture.width / 2,
-                                              ball_1_position.y + ball_texture.height / 2)
-                ball_1_radius = ball_texture.width / 2
-                ball_2_center = pyray.Vector2(ball_2_position.x + ball_texture.width / 2,
-                                              ball_2_position.y + ball_texture.height / 2)
-                ball_2_radius = ball_texture.width / 2
-                if pyray.check_collision_circles(ball_0_center, ball_0_radius, ball_1_center, ball_1_radius):
-                    ball_0_shift, ball_1_shift = ball_1_shift, ball_0_shift
-                    collision_count += 1
-                if pyray.check_collision_circles(ball_0_center, ball_0_radius, ball_2_center, ball_2_radius):
-                    ball_0_shift, ball_2_shift = ball_2_shift, ball_0_shift
-                    collision_count += 1
-                if pyray.check_collision_circles(ball_1_center, ball_1_radius, ball_2_center, ball_2_radius):
-                    ball_1_shift, ball_2_shift = ball_2_shift, ball_1_shift
-                    collision_count += 1
+            # rec_l = 1
+            # rec_r = 1
+            # main code
+            while not pyray.window_should_close():
+                # if platform
+                keys = []
+                while value := pyray.get_key_pressed():
+                    keys.append(value)
+                if pyray.is_key_down(pyray.KeyboardKey.KEY_A):
+                    if rec_x >= tx:
+                        rec_x -= tx
+                if pyray.is_key_down(pyray.KeyboardKey.KEY_D):
+                    if rec_x <= width - tx - rec_width:
+                        rec_x += tx
 
-                # Переключение сцен при достижении нужного количества коллизий
-                if collision_count == max_collision_count:
-                    scene_changed = True
-                    scene_index = 2
+                # if ball
+                if int(ball_x) <= 0 or int(ball_x) >= width - ball_texture.width:
+                    flx *= -1
+                if int(ball_y) <= 0:
+                    fly *= -1
+                if (rec_x - ball_texture.width <= int(ball_x) <= rec_x + rec_width
+                        and int(ball_y) == rec_y - ball_texture.height):
+                    fly *= -1
 
-            elif scene_index == 2:  # gameover
-                now = datetime.datetime.now()
-                wait_seconds = (now - open_scene_datetime).seconds
+                # geometry
+                if flx == 1:
+                    ball_x += speed_ball * cos_x
+                if fly == 1:
+                    ball_y += speed_ball * sin_x
+                if flx == -1:
+                    ball_x -= speed_ball * cos_x
+                if fly == -1:
+                    ball_y -= speed_ball * sin_x
 
-                # Переключение сцен при достижении нужного количества секунд (микросекунд)
-                if wait_seconds == max_wait_seconds:
-                    scene_changed = True
-                    scene_index = 0
+                # draw back
+                pyray.begin_drawing()
+                if flag:
+                    pyray.clear_background(colors.BLACK)
+                    pyray.draw_text_ex(font, '{}'.format(count), pyray.Vector2(width // 2 - 20, 10), 32, 1,
+                                       colors.WHITE)
+                    pyray.draw_text_ex(font, '{}'.format(exp), pyray.Vector2(width // 2 + 20, 10), 32, 1, colors.WHITE)
 
-        # Обработка отрисовки различных сцен (при каждом кадре)
-        if not scene_changed:
-            pyray.begin_drawing()
-            pyray.clear_background(background_color)
+                    # draw figures
+                    pyray.draw_line_ex(
+                        pyray.Vector2(width / 2, height / 2),
+                        pyray.Vector2(vec_x, vec_y),
+                        3, colors.BLACK)
+                    if i // 2:
+                        pyray.draw_texture(ball_texture,
+                                           int(ball_x), int(ball_y),
+                                           colors.WHITE)
 
-            if scene_index == 0:  # menu
-                # четыре анимированные линии (две кнопки уже отрисовались)
-                pyray.draw_line_ex(pyray.Vector2(100, 100), pyray.Vector2(100 + 600 * percent_completed, 100),
-                                   4, line_color)
-                pyray.draw_line_ex(pyray.Vector2(700, 100), pyray.Vector2(700, 100 + 400 * percent_completed, ),
-                                   4, line_color)
-                pyray.draw_line_ex(pyray.Vector2(700, 500), pyray.Vector2(700 - 600 * percent_completed, 500),
-                                   4, line_color)
-                pyray.draw_line_ex(pyray.Vector2(100, 500), pyray.Vector2(100, 500 - 400 * percent_completed),
-                                   4, line_color)
-            elif scene_index == 1:  # game
-                pyray.draw_texture_v(ball_texture, ball_0_position, colors.WHITE)
-                pyray.draw_texture_v(ball_texture, ball_1_position, colors.WHITE)
-                pyray.draw_texture_v(ball_texture, ball_2_position, colors.WHITE)
-                pyray.draw_text(collision_text_format.format(collision_count), 10, 10, 78, colors.WHITE)
-            elif scene_index == 2:  # gameover
-                pyray.draw_text(gameover_text_format.format(wait_seconds), 100, 250, 78, colors.RED)
+                    pyray.draw_rectangle(
+                        int(rec_x), rec_y, rec_width, rec_height,
+                        colors.YELLOW)
 
-            pyray.end_drawing()
+                    # draw blocks
+                    for m in range(5):
+                        for n in range(10):
+                            if block[m][n] == 0:
+                                bx += 78
+                            else:
+                                flx, fly, count, ep, yes_no = block[m][n].touch(bx, by, ball_x, ball_y, flx, fly,
+                                                                                ball_texture, count)
+                                exp += ep
+                                if block[m][n].hp > 0 and not yes_no:
+                                    if block[m][n].is_b("Brick"):
+                                        pyray.draw_rectangle(
+                                            bx, by, 75, 25,
+                                            colors.BROWN)
+                                        bx += 78
+                                    if block[m][n].is_b("Tnt"):
+                                        pyray.draw_rectangle(
+                                            bx, by, 75, 25,
+                                            colors.RED)
+                                        bx += 78
+                                    if block[m][n].is_b("Block"):
+                                        pyray.draw_rectangle(
+                                            bx, by, 75, 25,
+                                            colors.GRAY)
+                                        bx += 78
+                                    if block[m][n].boom:
+                                        if n != 0 and block[m][n - 1] != 0:
+                                            block[m][n - 1].hp = 0
+                                        if n != 9 and block[m][n - 1] != 0:
+                                            block[m][n + 1].hp = 0
+                                        if m != 0 and block[m][n - 1] != 0:
+                                            block[m - 1][n].hp = 0
+                                        if m != 4 and block[m][n - 1] != 0:
+                                            block[m + 1][n].hp = 0
 
-    pyray.unload_texture(ball_texture)
+                        by += 28
+                        bx = 10
+                    bx = 10
+                    by = 50
+                # crash
+                if ball_y > 1000:
+                    break
+                if int(ball_y) >= height:
+                    flag = 0
+                    pyray.clear_background(colors.BLACK)
+                    pyray.draw_text_ex(font, '{}'.format(count), pyray.Vector2(width // 2 - 70, 100), 64, 1,
+                                       colors.WHITE)
+                    pyray.draw_text_ex(font, '{}'.format(exp), pyray.Vector2(width // 2 + 70, 100), 64, 1, colors.WHITE)
+                    pyray.draw_text_ex(font, 'GAME OVER', pyray.Vector2(width // 2 - 175, height // 2), 68, 2,
+                                       colors.WHITE)
+                    tx = 0
+                # end draw
+                pyray.end_drawing()
+                i += 1
+                speed_ball += 0.000001
+
+            pyray.unload_texture(ball_texture)
+            pyray.close_window()
     pyray.close_window()
-    exit(0)
 
 
 if __name__ == '__main__':
