@@ -95,7 +95,7 @@ def main():
             rec_height = 5
             rec_x = width // 2 - rec_width // 2
             rec_y = height - rec_height - 5
-            tx = 1
+            tx = 0.5
             ball_x = width // 2 - ball_texture.width // 2
             ball_y = height // 2 - ball_texture.height // 2
 
